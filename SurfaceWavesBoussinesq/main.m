@@ -163,23 +163,19 @@ int main(int argc, const char * argv[])
         GLLinearTransform *dct = [GLLinearTransform discreteTransformFromDimension: xDim toBasis: kGLCosineBasis forEquation:equation];
         GLLinearTransform *idct = [GLLinearTransform discreteTransformFromDimension: dct.toDimensions[0] toBasis: kGLDeltaBasis forEquation: equation];
         
-        GLLinearTransform *cos_ddx = [GLLinearTransform differentiationMatrixFromDimension: dct.toDimensions[0] forEquation: equation];
-        GLLinearTransform *sin_ddx = [GLLinearTransform differentiationMatrixFromDimension: cos_ddx.toDimensions[0] forEquation:equation];
-        GLLinearTransform *ddxx = [sin_ddx times: cos_ddx];
+        GLLinearTransform *ddxx = [GLLinearTransform differentialOperatorWithDerivatives: 2 fromDimension: dct.toDimensions[0] forEquation: equation];
         
-        GLLinearTransform *B = [GLLinearTransform transformOfType: kGLRealDataFormat withFromDimensions: @[xDim] toDimensions: @[xDim] inFormat: @[@(kGLDenseMatrixFormat)] forEquation: equation];
-        GLVariable *bathFactor = [[bathymetry times: bathymetry] scalarMultiply: alpha];
+        GLLinearTransform *B = [GLLinearTransform transformOfType: kGLRealDataFormat withFromDimensions: @[xDim] toDimensions: @[xDim] inFormat: @[@(kGLDenseMatrixFormat)] forEquation: equation matrix: nil];
+        GLFunction *bathFactor = [[bathymetry times: bathymetry] scalarMultiply: alpha];
         [bathFactor solve];
         [B setVariableAlongDiagonal: bathFactor];
         
-        GLLinearTransform *identity = [GLLinearTransform transformOfType: kGLRealDataFormat withFromDimensions: @[xDim] toDimensions: @[xDim] inFormat: @[@(kGLDenseMatrixFormat)] forEquation: equation];
-        GLVariable *ones = [GLVariable variableOfRealTypeWithDimensions: @[xDim] forEquation:equation];
-        ones = [ones setValue: 1.0 atIndices: @":"];
-        [ones solve];
-        [identity setVariableAlongDiagonal: ones];
+        GLLinearTransform *identity = [GLLinearTransform transformOfType: kGLRealDataFormat withFromDimensions: @[xDim] toDimensions: @[xDim] inFormat: @[@(kGLDenseMatrixFormat)] forEquation: equation matrix:^( NSUInteger *row, NSUInteger *col ) {
+            return (GLFloatComplex) (row[0]==col[0] ? 1.0 : 0.0);
+        }];
         
-        GLLinearTransform *B2 = [GLLinearTransform transformOfType: kGLRealDataFormat withFromDimensions: @[xDim] toDimensions: @[xDim] inFormat: @[@(kGLDenseMatrixFormat)] forEquation: equation];
-        GLVariable *bathFactor2 = [[bathymetry times: [bathymetry xx]] scalarMultiply: -beta];
+        GLLinearTransform *B2 = [GLLinearTransform transformOfType: kGLRealDataFormat withFromDimensions: @[xDim] toDimensions: @[xDim] inFormat: @[@(kGLDenseMatrixFormat)] forEquation: equation matrix: nil];
+        GLFunction *bathFactor2 = [[bathymetry times: [bathymetry xx]] scalarMultiply: -beta];
         [bathFactor2 solve];
         [B2 setVariableAlongDiagonal: bathFactor2];
         
