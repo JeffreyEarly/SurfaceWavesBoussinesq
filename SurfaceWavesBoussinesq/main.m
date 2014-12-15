@@ -26,8 +26,8 @@ int main(int argc, const char * argv[])
         GLFloat slopeBreakToSandbar = 5.0e3; // distance from the slope break, to the top of the sandbar
         GLFloat nPoints = 1024; // number of points used to discretize the domain.
         
-        GLFloat totalTime = 500; // in seconds
-        GLFloat outputInterval = 1; // in seconds
+        GLFloat totalTime = 2000; // in seconds
+        GLFloat outputInterval = 10; // in seconds
         NSURL *outputFile = [NSURL URLWithString: @"/Users/jearly/Desktop/BoussinesqWave.nc"];
 		      
         /************************************************************************************************/
@@ -79,7 +79,7 @@ int main(int argc, const char * argv[])
         
         GLEquation *equation = [[GLEquation alloc] init];
         
-        GLDimension *xDim =[[GLDimension alloc] initDimensionWithGrid: kGLPeriodicGrid nPoints: nPoints domainMin: domainMin length:domainWidth];
+        GLDimension *xDim =[[GLDimension alloc] initDimensionWithGrid: kGLInteriorGrid nPoints: nPoints domainMin: domainMin length:domainWidth];
         xDim.name = @"x";
         xDim.units = @"meters";
         
@@ -88,7 +88,7 @@ int main(int argc, const char * argv[])
         tDim.units = @"seconds";
         
         // This is the dimension for the cosine basis.
-        GLDimension *kDim = [[GLDimension alloc] initAsDimension: xDim transformedToBasis: kGLCosineBasis strictlyPositive: YES];
+        //GLDimension *kDim = [[GLDimension alloc] initAsDimension: xDim transformedToBasis: kGLCosineBasis strictlyPositive: YES];
         
         GLFunction *x = [GLFunction functionOfRealTypeFromDimension: xDim withDimensions: @[xDim] forEquation: equation];
         
@@ -186,32 +186,29 @@ int main(int argc, const char * argv[])
         [inverseOperator solve];
         
         GLVariable *initialY = [operator transform: initialU];
-        
-        [equation setDefaultDifferentiationBasis: @[@(kGLCosineHalfShiftBasis)] forOrder: 1];
-        
-        diffOperators = [equation defaultDifferentialOperatorPoolForVariable: x];
-        
-        // Create our damping operator
-        GLFloat nu = pow(xDim.sampleInterval/M_PI, 2.0)/timeStep;
-        GLSpectralDifferentialOperator *svv = [diffOperators spectralVanishingViscosityFilter];
-        //[diffOperators setDifferentialOperator: [[diffOperators harmonicOperatorOfOrder: 1] scalarMultiply: nu] forName: @"damp"];
-        [diffOperators setDifferentialOperator: [[[diffOperators harmonicOperatorOfOrder: 1] scalarMultiply: nu] multiply: svv] forName: @"damp"];
+		
+		
+		GLFloat nu = pow(xDim.sampleInterval/M_PI, 2.0)/timeStep;
+		NSArray *spectralDimensions = dct.toDimensions;
+		GLLinearTransform *laplacian = [GLLinearTransform harmonicOperatorOfOrder: 1 fromDimensions: spectralDimensions forEquation: equation];
+		GLLinearTransform *svv = [GLLinearTransform spectralVanishingViscosityFilterWithDimensions: spectralDimensions scaledForAntialiasing: YES forEquation: equation];
+		GLLinearTransform *harmonicDamp = [[laplacian times: @(nu)] multiply: svv];
         
         /************************************************************************************************/
         /*		Create an integrator: dy/dt=f															*/
         /************************************************************************************************/
         
         //GLRungeKuttaOperation *integrator = [GLAdaptiveRungeKuttaOperation rungeKutta23AdvanceY: @[initialY, initialEta] stepSize: timeStep fFromTY:^(GLVariable *time, NSArray *yNew) {
-        GLRungeKuttaOperation *integrator = [GLRungeKuttaOperation rungeKutta4AdvanceY: @[initialY, initialEta] stepSize: timeStep fFromTY:^(GLVariable *time, NSArray *yNew) {
+        GLRungeKuttaOperation *integrator = [GLRungeKuttaOperation rungeKutta4AdvanceY: @[initialY, initialEta] stepSize: timeStep fFromTY:^(GLScalar *time, NSArray *yNew) {
             
-            GLVariable *u = [inverseOperator transform: yNew[0]];
-            GLVariable *eta = yNew[1];
+            GLFunction *u = [inverseOperator transform: yNew[0]];
+            GLFunction *eta = yNew[1];
             
-            GLVariable *fU = [[[[eta x] spatialDomain] scalarMultiply: -g] minus: [u times: [u x]]];
+            GLFunction *fU = [[[[eta x] spatialDomain] scalarMultiply: -g] minus: [u times: [u x]]];
             
-            GLVariable *bathymetryFactor1 = [bathymetry plus: [[[bathymetry times: bathymetry] times: [bathymetry xx]] scalarMultiply: -beta+0.5]];
-            GLVariable *bathymetryFactor2 = [[[bathymetry times: bathymetry] times: bathymetry] scalarMultiply: alpha+1./3.];
-            GLVariable *fEta = [[[[[[eta plus: bathymetryFactor1] times: u] plus: [bathymetryFactor2 times: [u xx]]] x] negate] spatialDomain];
+            GLFunction *bathymetryFactor1 = [bathymetry plus: [[[bathymetry times: bathymetry] times: [bathymetry xx]] scalarMultiply: -beta+0.5]];
+            GLFunction *bathymetryFactor2 = [[[bathymetry times: bathymetry] times: bathymetry] scalarMultiply: alpha+1./3.];
+            GLFunction *fEta = [[[[[[eta plus: bathymetryFactor1] times: u] plus: [bathymetryFactor2 times: [u xx]]] x] negate] spatialDomain];
             //GLVariable *fEta = [[[[[eta plus: bathymetry] times: u] x] negate] spatialDomain];
             
             // Apply the sponge
@@ -219,16 +216,16 @@ int main(int argc, const char * argv[])
             fEta = [fEta plus: [yNew[1] times: sponge]];
             
             // Create the wave generator
-            GLVariable *easein = [[[[[time scalarMultiply: omega/(5*2.0*M_PI)] negate] exponentiate] negate] scalarAdd:1.0];
-            GLVariable *arg = [[time scalarMultiply: omega] minus: [x scalarMultiply: k]];
-            GLVariable *etaBoundary = [[arg cos] multiply: [easein scalarMultiply: F_eta]];
-            GLVariable *uBoundary = [[arg cos] multiply: [easein scalarMultiply: F_u]];
-            
+			GLScalar *easein = [[[[[time times: @(omega/(5*2.0*M_PI))] negate] exponentiate] negate] plus: @(1.0)];
+            GLFunction *arg = [[time times: @(omega)] minus: [x times: @(k)]];
+            GLFunction *etaBoundary = [[arg cos] times: [easein times: @(F_eta)]];
+			GLFunction *uBoundary = [[arg cos] times: [easein times: @(F_u)]];
+			
             //			fU = [fU plus: [uBoundary times: taper]];
             //            fEta = [fEta plus: [etaBoundary times: taper]];
             
-            fU = [[uBoundary times: taper] plus: [fU times: inverseTaper]];
-            fEta = [[etaBoundary times: taper] plus: [fEta times: inverseTaper]];
+            fU = [[taper times: uBoundary] plus: [fU times: inverseTaper]];
+            fEta = [[taper times: etaBoundary] plus: [fEta times: inverseTaper]];
             
             //			fEta = [[etaBoundary times: taper] plus: [etaBoundary times: inverseTaper]];
             //			fU = [[uBoundary times: taper] plus: [uBoundary times: inverseTaper]];
@@ -247,8 +244,8 @@ int main(int argc, const char * argv[])
             //			fU = [fU setVariableValue: uBoundary atIndices: @"0"];
             
             // Damp
-            fU = [fU plus: [[u diff:@"damp"] spatialDomain]];
-            fEta = [fEta plus: [[eta diff:@"damp"] spatialDomain]];
+            fU = [fU plus: [[[u transformToBasis: @[@(kGLCosineBasis)]] differentiateWithOperator: harmonicDamp] spatialDomain]];
+            fEta = [fEta plus: [[[eta transformToBasis: @[@(kGLCosineBasis)]] differentiateWithOperator: harmonicDamp] spatialDomain]];
             
             return @[fU, fEta];
         }];
