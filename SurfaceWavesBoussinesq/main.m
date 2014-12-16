@@ -21,13 +21,16 @@ int main(int argc, const char * argv[])
         GLFloat significantWaveHeight = 1.0; // peak-to-peak amplitude of the wave, in meters
         GLFloat waveLength = 150; // wavelength of the sinusoid, in meters
         GLFloat sandbarHeight = 2; // sandbar height, in meters
-        GLFloat waterDepthAtSandbar = 2; // depth of the water at the sandbar, in meters
+        GLFloat waterDepthAtSandbar = 3; // depth of the water at the sandbar, in meters
         GLFloat runupToSlopeBreak = 1.0e3; // distance from the domain edge (where the forcing occurs) to the slope break
         GLFloat slopeBreakToSandbar = 5.0e3; // distance from the slope break, to the top of the sandbar
-        GLFloat nPoints = 1024; // number of points used to discretize the domain.
-        
-        GLFloat totalTime = 2000; // in seconds
-        GLFloat outputInterval = 10; // in seconds
+        GLFloat nPoints = 4096; // number of points used to discretize the domain.
+		
+		// Note: nPoints isn't scaling well. It requires the cfl to be 0.05, whereas 2048 requires cfl=0.25, 1024 works for less, etc.
+		// Obviously I've scaled something incorrectly--damping?
+		
+        GLFloat totalTime = 1000; // in seconds
+        GLFloat outputInterval = 1; // in seconds
         NSURL *outputFile = [NSURL URLWithString: @"/Users/jearly/Desktop/BoussinesqWave.nc"];
 		      
         /************************************************************************************************/
@@ -151,7 +154,7 @@ int main(int argc, const char * argv[])
         /*		Estimate the time step size																*/
         /************************************************************************************************/
         
-        CGFloat cfl = 0.5;
+        CGFloat cfl = 0.05;
         GLFloat U = sqrt(g*depth);
         GLFloat timeStep = cfl * xDim.sampleInterval / U;
         
@@ -191,14 +194,14 @@ int main(int argc, const char * argv[])
 		GLFloat nu = pow(xDim.sampleInterval/M_PI, 2.0)/timeStep;
 		NSArray *spectralDimensions = dct.toDimensions;
 		GLLinearTransform *laplacian = [GLLinearTransform harmonicOperatorOfOrder: 1 fromDimensions: spectralDimensions forEquation: equation];
-		GLLinearTransform *svv = [GLLinearTransform spectralVanishingViscosityFilterWithDimensions: spectralDimensions scaledForAntialiasing: YES forEquation: equation];
+		GLLinearTransform *svv = [GLLinearTransform spectralVanishingViscosityFilterWithDimensions: spectralDimensions scaledForAntialiasing: NO forEquation: equation];
 		GLLinearTransform *harmonicDamp = [[laplacian times: @(nu)] multiply: svv];
         
         /************************************************************************************************/
         /*		Create an integrator: dy/dt=f															*/
         /************************************************************************************************/
         
-        //GLRungeKuttaOperation *integrator = [GLAdaptiveRungeKuttaOperation rungeKutta23AdvanceY: @[initialY, initialEta] stepSize: timeStep fFromTY:^(GLVariable *time, NSArray *yNew) {
+        //GLRungeKuttaOperation *integrator = [GLAdaptiveRungeKuttaOperation rungeKutta23AdvanceY: @[initialY, initialEta] stepSize: timeStep fFromTY:^(GLScalar *time, NSArray *yNew) {
         GLRungeKuttaOperation *integrator = [GLRungeKuttaOperation rungeKutta4AdvanceY: @[initialY, initialEta] stepSize: timeStep fFromTY:^(GLScalar *time, NSArray *yNew) {
             
             GLFunction *u = [inverseOperator transform: yNew[0]];

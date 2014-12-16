@@ -1,18 +1,36 @@
-function Boussinesq1DBathymetryMatlab
 
-	file = '/Users/jearly/Desktop/BoussinesqWave.nc';
+file = '/Users/jearly/Desktop/BoussinesqWave.nc';
+FramesFolder ='/Users/jearly/Desktop/BoussinesqWaveFrames';
 
-	x = ncread(file, 'x');
-	t = ncread(file, 'time');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 	Make the frames folder
+%
+if exist(FramesFolder,'dir') == 0
+	mkdir(FramesFolder);
+end
 
-	ssh = ncread(file, 'SSH');
-	bathymetry = ncread(file, 'bathymetry');
-	sponge = ncread(file, 'sponge');
-	wave_generator = ncread(file, 'wave_generator');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 	Read in the problem dimensions
+%
+x = ncread(file, 'x');
+t = ncread(file, 'time');
 
-	scrsz = get(0,'ScreenSize');
-	figure('Position',[1 scrsz(4)/2 scrsz(3) scrsz(4)/2])
+ssh = ncread(file, 'SSH');
+bathymetry = ncread(file, 'bathymetry');
+sponge = ncread(file, 'sponge');
+wave_generator = ncread(file, 'wave_generator');
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 	Setup the figure
+%
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/2 scrsz(3) scrsz(4)/2])
+
+for iTime=1:1000%length(t)
 	% 'area' fills everything between the line and the zero axis,
 	harea = area(x/1000, -bathymetry);
 	% so we need to color that area 'blue'
@@ -23,8 +41,6 @@ function Boussinesq1DBathymetryMatlab
 	% We instructed matlab not to draw a line at the bathymetry, so let's do that now.
 	plot(x/1000, -bathymetry, 'LineWidth', 2, 'Color', 'black')
     
-    iTime = length(t);
-	%iTime = 2;
 	wave = ssh(:,iTime);
     
 	% adjust the axis to show a bit more earth and wave surface.
@@ -81,78 +97,8 @@ function Boussinesq1DBathymetryMatlab
 	% tighten the plot
 	T = get(gca,'tightinset');
 	set(gca,'position',[T(1) T(2) 1-T(1)-T(3) 1-T(2)-T(4)-.05]);
-
+    
+    output = sprintf('%s/t_%03d', FramesFolder,iTime-1);
+    export_fig(output,'-r300')
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	Given the x-axes and the wave height, this function returns the range of indices
-%	that exceed the critical slope value of 1/7.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [mins, maxes] = FindCriticalSlopeIndices( x, wave )
-	deltaX = x(2)-x(1);
-	slope = diff(wave)/deltaX;
-	criticalIndices = find( abs(slope) > 1/7 );
-
-
-	mins = [];
-	maxes = [];
-	
-	% This algorithm searches to see if this point to neighboring points has a slope
-	% that exceeds 1/7. For example, lets say the slope between indices 4 and 5 exceeds
-	% the threshold. This looks to see if the slope between 3 and 5 also exceeds the
-	% threshold. This looks both backwards and forwards.
-	for index=criticalIndices'
-		if ( ismember( index, maxes) )
-			continue;
-		end
-
-		minIndex = index;
-		maxIndex = index+1;
-	
-		mySlope = abs((wave(maxIndex) - wave(minIndex))/(x(maxIndex) - x(minIndex)));	
-	
-		while ( mySlope > 1/7 )
-			minIndex = minIndex-1;
-			mySlope = abs((wave(maxIndex) - wave(minIndex))/(x(maxIndex) - x(minIndex)));		
-		end
-		minIndex = minIndex+1;
-	
-		mySlope = abs((wave(maxIndex) - wave(index))/(x(maxIndex) - x(index)));
-	
-		while ( mySlope > 1/7 )
-			maxIndex = maxIndex+1;
-			mySlope = abs((wave(maxIndex) - wave(index))/(x(maxIndex) - x(index)));	
-		end
-		maxIndex = maxIndex-1;
-	
-		mins = [mins; minIndex];
-		maxes = [maxes; maxIndex];	
-	end
-	
-	% this part of the algorithm groups overlapping index ranges together.
-	i=1;
-	while ( i < length(maxes)-1 )
-		if ( maxes(i) >= mins(i+1) )
-			maxes(i) = maxes(i+1);
-			mins(i+1)=[];
-			maxes(i+1)=[];
-		else
-			i=i+1;
-		end
-	end
-	
-	% This next part of the algorithm groups together ranges that are part of the same
-	% wave.
-	
-% 	i=1;
-% 	while ( i < length(maxes)-1 )
-% 		if ( maxes(i) >= mins(i+1) )
-% 			maxes(i) = maxes(i+1);
-% 			mins(i+1)=[];
-% 			maxes(i+1)=[];
-% 		else
-% 			i=i+1;
-% 		end
-% 	end
-end
