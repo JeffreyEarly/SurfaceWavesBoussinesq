@@ -1,0 +1,199 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{amsmath}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\title{Boussinesq Model for Shallow-Water Waves}
+\author{Jeffrey J. Early}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{Governing Equations}
+The dimensionalized governing equations are,
+\begin{align}
+u_t + u u_x + w u_z + p_x &=0 \\
+w_t+ u w_x + w w_z + p_z + g &=0 \\
+u_x + w_z &= 0 \\
+u_z &= w_x.
+\end{align}
+These include the horizontal momentum equation, vertical momentum equation, continuity equation and irrotational condition, respectively.
+
+The two boundary conditions are,
+\[
+p = 0 \textrm{ at } z=\eta(x,t)
+\]
+and
+\[
+u h_x + w = 0 \textrm{ at } z=-h(x).
+\]
+The first boundary condition is simply stating that the pressure vanishes at the free surface. The second boundary condition states that the a sloping boundary deflects fluid vertically. In addition, the kinematic condition is that $\frac{dz}{dt}=w$, which, when applied to the surface, states that $\eta_t + u \eta_x = w$.
+
+It's important to carefully compute the Leibniz rule for the following integral,
+\begin{align}
+\int_{-h}^{\eta} u_x \, dz =& \partial_x \int_{-h}^{\eta} u \, dz - u \eta_x\bigg|_{z=\eta} - h \eta_x\bigg|_{z=-h}
+\end{align}
+
+Integrating the continuity equation from the bottom boundary to some arbitrary height gives us,
+\begin{equation}
+w - w(-h) + \int_{-h}^{z} u_x \, dz = 0
+\end{equation}
+which allows us to find $w$ in terms of other variables,
+\begin{equation}
+w = -uh_x\bigg|_{z=-h} - \int_{-h}^{z} u_x \, dz.
+\end{equation}
+However, if we now apply the Leibniz rule to the integral, we find that,
+\begin{equation}
+w = -uh_x\bigg|_{z=-h} - \partial_x \int_{-h}^{z} u \, dz + uz_x + uh_x\bigg|_{z=-h}
+\end{equation}
+which is simply,
+\begin{equation}
+w = - \partial_x \int_{-h}^{z} u \, dz 
+\end{equation}
+
+Or, integrating to the surface and using the surface boundary condition, this can be written as
+\begin{equation}
+\eta_t + Q_x  = 0
+\end{equation}
+where
+\begin{equation}
+Q = \int_{-h(x)}^{\eta(x,t)} u \, dz.
+\end{equation}
+This basically states that a fluid flux is offset by a change in sea-level height.
+
+\section{Non-dimensionalization}
+
+Let's pull the scales out of these equations,
+\begin{align}
+\left( \frac{U}{T} \right) u_t + \left( \frac{U^2}{L} \right)  u u_x + \left( \frac{UW}{H} \right)  w u_z + \left( \frac{P}{L} \right)  p_x &=0 \\
+\left( \frac{W}{T} \right)  w_t+ \left( \frac{UW}{L} \right)  u w_x + \left( \frac{W^2}{H} \right)  w w_z + \left( \frac{P}{H} \right)  p_z + g \cdot 1 &=0 \\
+\left( \frac{U}{L} \right) u_x + \left( \frac{W}{H} \right)  w_z &= 0 \\
+\left( \frac{U}{H} \right) u_z - \left( \frac{W}{L} \right)  w_x &= 0.
+\end{align}
+Right off, we can identify the hydrostatic balance as the primary balance in the equation, so that $P=gH$. The scaled equations become,
+\begin{align}
+\left( \frac{U}{T} \right) u_t + \left( \frac{U^2}{L} \right)  u u_x + \left( \frac{UW}{H} \right)  w u_z + \left( \frac{gH}{L} \right)  p_x &=0 \\
+\left( \frac{W}{gT} \right)  w_t+ \left( \frac{UW}{gL} \right)  u w_x + \left( \frac{W^2}{gH} \right)  w w_z + p_z + 1 &=0 \\
+\left( \frac{U}{L} \right) u_x + \left( \frac{W}{H} \right)  w_z &= 0 \\
+\left( \frac{U}{H} \right) u_z - \left( \frac{W}{L} \right)  w_x &= 0.
+\end{align}
+after dividing the second equation through by $g$. In the first equation we expect horizontal accelerations to be primarily controlled by the horizontal pressure gradient (i.e., a linear response). This requires $\frac{U}{T}=\frac{gH}{L}$, or, with the intention of eliminating $T$, $T = \frac{U L}{gH}$. The scaled equations now become,
+\begin{align}
+u_t + \left( \frac{U^2}{gH} \right)  u u_x + \left( \frac{UW L}{gH^2} \right)  w u_z + p_x &=0 \\
+\left( \frac{WH}{UL} \right)  w_t+ \left( \frac{UW}{gL} \right)  u w_x + \left( \frac{W^2}{gH} \right)  w w_z + p_z + 1 &=0 \\
+\left( \frac{U}{L} \right) u_x + \left( \frac{W}{H} \right)  w_z &= 0 \\
+\left( \frac{U}{H} \right) u_z - \left( \frac{W}{L} \right)  w_x &= 0.
+\end{align}
+We certainly expect the scales in the continuity equation to balance, as that's what's going to be driving the waves. So it must be true that $W=\frac{U H}{L}$ if both terms are the same magnitude. It is also true, however, that $W=\frac{N_0}{T}$ if $N_0$ is assumed to be the scale height of the free surface. Combining these two conditions,
+\begin{align}
+\frac{U H}{L} =& \frac{N_0}{T} \\
+\frac{U H}{L} =& \frac{N_0 g H}{U L} \\
+U^2 =& g N_0 \\
+U = \sqrt{g N_0}
+\end{align}
+which in turn implies that,
+\[
+W = \sqrt{g N_0} \frac{H}{L}.
+\]
+These mean that we can now eliminate all the $U$ and $W$ scales, in favor of $N_0$, $H$, and $L$. We find that,
+\begin{align}
+u_t + \left( \frac{N_0}{H} \right)  u u_x + \left( \frac{N_0}{H} \right)  w u_z + p_x &=0 \\
+\left( \frac{H}{L} \right)^2  w_t+ \left( \frac{N_0 H}{L^2} \right)  u w_x + \left( \frac{N_0 H}{L^2} \right)  w w_z + p_z + 1 &=0 \\
+u_x +  w_z &= 0 \\
+u_z - \left( \frac{H}{L} \right)^2  w_x &= 0.
+\end{align}
+These assumptions are probably fairly reasonable up to this stage. But now we have to assess the importance of the two ratios that appear in the equation, $\frac{H}{L}$ and $\frac{N_0}{H}$. Let's try to assess these ratios using values from Lai and Delisi, 2008. From figure 10 a, it appears that the waves have a wavelength of approximately 300 meters when the depth is 50 meters. So, $\frac{H}{L}\approx 0.17$. At the same time, the wave heights are about 5 meters, suggesting that $\frac{N_0}{H} \approx 0.1$. In figure 11 (b), these ratios are more like $\frac{H}{L}\approx 0.35$ and $\frac{N_0}{H} \approx 0.1$. The traditional approximation is to assume that $\left(\frac{H}{L}\right)^2=\frac{N_0}{H}$, and this actually seems fairly reasonable. So with that, we define $\epsilon \equiv \left(\frac{H}{L}\right)^2=\frac{N_0}{H}$. The equations reduce to,
+\begin{align}
+u_t +  \epsilon  u u_x + \epsilon w u_z + p_x &=0 \\
+\epsilon  w_t+ \epsilon^2 u w_x + \epsilon^2  w w_z + p_z + 1 &=0 \\
+u_x +  w_z &= 0 \\
+u_z - \epsilon  w_x &= 0.
+\end{align}
+
+\section{Asymptotic Expansion}
+Now that the equations are appropriately nondimensionalized, we are in a good position to do an asymptotic expansion of the variables in terms of $\epsilon$. In particular,
+\begin{align}
+u =& u_0 + \epsilon u_1 + \epsilon^2 u_2 + ... \\
+w =& w_0 + \epsilon w_1 + \epsilon^2 w_2 + ... \\
+p =& p_0 + \epsilon p_1 + \epsilon^2 p_2 + ... \\
+\eta =& \eta_0 + \epsilon \eta_1 + \epsilon^2 \eta_2 + ...
+\end{align}
+
+\subsection{$O(1)$ equations}
+Inserting the expansions into our equations and collecting terms of $O(1)$, we find that
+\begin{align}
+\partial_t u_0 +  \partial_x p_0 &=0 \\
+\partial_z p_0 + 1 &=0 \\
+\partial_x u_0 + \partial_z w_0 &= 0 \\
+\partial_z u_0 &= 0.
+\end{align}
+Assuming a quiescent ocean at this lowest order, then $p_0=-z$ and all other variables are $0$.
+
+\subsection{$O(\epsilon)$ equations}
+The $O(\epsilon)$ equations are found to be,
+\begin{align}
+\partial_t u_1 + u_0 \partial_x u_0 + w_0 \partial_z u_0 + \partial_x p_1 &=0 \\
+\partial_t w_0  + \partial_z p_1  &=0 \\
+\partial_x u_1 + \partial_z w_1 &= 0 \\
+\partial_z u_1 &= \partial_x w_0.
+\end{align}
+but of course several of the variables are known to vanish from the previous solution. So really we just have that,
+\begin{align}
+\partial_t u_1 + \partial_x p_1 &=0 \\
+ \partial_z p_1  &=0 \\
+\partial_x u_1 + \partial_z w_1 &= 0 \\
+\partial_z u_1 &= 0.
+\end{align}
+The pressure and velocity are apparently both independent of depth. This is convenient because our surface boundary condition requires that,
+\begin{equation}
+p_0 + \epsilon p_1 = 0 \textrm{ at } z=\eta_0 + \epsilon \eta_1.
+\end{equation}
+Given that $p_0=-z$, this requires that $p_1=\eta_1(x,t)$.
+
+The integrated form of the continuity equation for this order is just,
+\begin{equation}
+\partial_t \eta_1 + \partial_x \int_{-h(x)}^{\eta(x,t)} u_1 \, dz,
+\end{equation}
+but given that $u_1$ is independent of $z$, then
+\begin{equation}
+\partial_t \eta_1 + \partial_x \left( h u_1 \right) = 0.
+\end{equation}
+
+In conclusion, the equations of motion for this order are,
+\begin{align}
+\partial_t u_1 + \partial_x \eta_1 &=0 \\
+\partial_t \eta_1 + \partial_x \left( h u_1 \right)  &= 0 .
+\end{align}
+
+We still need to determine what $w_1$ is using our equation from the first section,
+\begin{equation}
+w_1 = \left( (z+h) u_1 \right)_x
+\end{equation}
+
+I think we can actually show that $h$ should be treated as constant at this level of approximation given that $h \approx h(0) + h_x(0)\cdot x + ...$
+
+\subsection{$O(\epsilon^2)$ equations}
+The $O(\epsilon)$ equations are found to be,
+\begin{align}
+\partial_t u_2 + u_1 \partial_x u_1 + w_1 \partial_z u_1 + \partial_x p_2 &=0 \\
+\partial_t w_1  + \partial_z p_2  &=0 \\
+\partial_x u_2 + \partial_z w_2 &= 0 \\
+\partial_z u_2 &= \partial_x w_1.
+\end{align}
+The key thing to notice here is that that pressure is determined through the vertical momentum equation in terms of all of the lower order variables which have previously been solved.
+
+\section{Unknown}
+\begin{align}
+\partial_t u + u \partial_x u + w \partial_z u + \partial_x p &=0 \\
+\partial_t w + u \partial_x w + w \partial_z w + \partial_z p + g &=0 \\
+\partial_x u + \partial_z w &= 0 \\
+\partial_z u &= \partial_x w.
+\end{align}
+
+\end{document}  

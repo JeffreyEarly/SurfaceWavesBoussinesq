@@ -1,0 +1,63 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{amsmath}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\DeclareMathOperator{\diag}{diag}
+
+\title{Shoaling Waves Model}
+\author{Jeffrey J. Early}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{Equations}
+We start with the Boussinesq equations from Nwogu, 1993. In his paper these are equations (25) and can be written as,
+\begin{align}
+\eta_t + \left( (h+\eta)u\right)_x + \partial_x \left[ \left( \frac{z^2}{2} - \frac{h^2}{6}\right) h u_{xx} + \left(z+\frac{h}{2}\right) h (hu)_{xx} \right] &=0 \\
+u_t + g \eta_x + u u_x + \left[ \frac{z^2}{2} u_{xxt} + z (hu_t)_{xx} \right] &= 0
+\end{align}
+where $z$ is the depth of integration and can be set to some function of $h$, the bathymetry. Let's set $z=-\beta h$, so that, after some rearrangement,
+\begin{align}
+\eta_t + \left( (h+\eta)u\right)_x + \partial_x \left[ \left( \frac{\beta^2}{2} - \beta + \frac{1}{3} \right) h^3 u_{xx} + \left(-\beta +\frac{1}{2}\right) h^2h_{xx} u  \right] &=0 \\
+u_t + g \eta_x + u u_x + \left[ \left( \frac{\beta^2}{2} - \beta \right) h^2 u_{xxt} - \beta h h_{xx} u_t \right] &= 0.
+\end{align}
+In his paper Nwogu uses the parameter $\alpha$ instead of $\beta$, the relationship between the two parameters is $\alpha = \frac{\beta^2}{2} - \beta$ and $\beta = 1 - \sqrt{1+2\alpha}$. Note that when $u$ is found at the bottom of the ocean, this requires that $\beta =1$, and $\alpha=-\frac{1}{2}$. If $u$ is found at the surface, then $\beta=0$ and $\alpha=0$.
+
+One of the key points of Nwogu's paper was that an `optimal' value $\alpha$ can be chosen in which the linear frequency dispersion relationship most closely matches the true frequency dispersion relationship (for both the phase and group speed). The linear dispersion relation is,
+\begin{equation}
+\frac{\omega^2}{k^2} = g h \left[ \frac{ 1 - \left(\alpha + \frac{1}{3} \right) (kh)^2}{1 - \alpha(kh)^2} \right].
+\end{equation}
+Nwogu find the optimal choice of $\alpha$ to be $\alpha = -0.393$, corresponding to $\beta = 0.537$ in our notation.
+
+\section{Model}
+
+For our model, we need to write the equations in the form $\frac{dy}{dt} = F$. So, rearranging we find that,
+\begin{align}
+\eta_t  &=-\left( (h+\eta)u\right)_x - \partial_x \left[ \left( \alpha + \frac{1}{3} \right) h^3 u_{xx} + \left(-\beta +\frac{1}{2}\right) h^2h_{xx} u  \right] \\
+\left[ 1+ \alpha h^2 \partial_{xx} - \beta h h_{xx} \right]u_t  &= - g \eta_x - u u_x.
+\end{align}
+where $\alpha$ and $\beta$ are being intermingled freely to make the notation more compact. We can continue to write this in a more computationally efficient form, by reducing the number of transformations that have to be made.
+\begin{align}
+\eta_t  &=- \partial_x \left[\left(h +  \left(-\beta +\frac{1}{2}\right) h^2h_{xx} +\eta  \right)u +  \left( \alpha + \frac{1}{3} \right) h^3 u_{xx}   \right] \\
+\left[ 1+ \alpha h^2 \partial_{xx} - \beta h h_{xx} \right]u_t  &= - g \eta_x - u u_x.
+\end{align}
+
+The tricky part is the operator,
+\begin{equation}
+L = 1+ \alpha h^2 \partial_{xx} - \beta h h_{xx}
+\end{equation}
+which must be inverted at each time step. Using $C$ to denote the forward cosine transform (or transform to whatever basis desired), and $D_{xx}$ to denote the differentiation matrix in that basis, this becomes,
+\begin{align}
+L &= I + \diag{ \left( \alpha h^2 \right)} C^{-1} D_{xx} C - \diag{ \left( \beta h h_{xx} \right)}.
+\end{align}
+where the operator $\diag{a(x_i)}$ indicates a matrix with the the coefficients of $a$ along the diagonal.
+
+
+\end{document}  
