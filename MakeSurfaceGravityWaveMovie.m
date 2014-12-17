@@ -28,7 +28,7 @@ wave_generator = ncread(file, 'wave_generator');
 % 	Setup the figure
 %
 scrsz = get(0,'ScreenSize');
-figure('Position',[1 scrsz(4)/2 scrsz(3) scrsz(4)/2])
+figure('Position',[1 scrsz(4)/2 1280 720])
 
 for iTime=1:1000%length(t)
 	% 'area' fills everything between the line and the zero axis,
@@ -46,9 +46,10 @@ for iTime=1:1000%length(t)
 	% adjust the axis to show a bit more earth and wave surface.
     xlim([min(x/1000) max(x/1000)])
 	ylim([-max(bathymetry)*1.1 max(max(ssh))*2.0])
-	xlabel('distance (km)','FontName', 'Helvetica','FontSize',18)
-	ylabel('depth (m)','FontName', 'Helvetica','FontSize',18)
-	title('Surface gravity waves','FontName', 'Helvetica','FontSize',24);
+    set( gca, 'FontSize', 18);
+	xlabel('distance (km)','FontName', 'Helvetica','FontSize',24)
+	ylabel('depth (m)','FontName', 'Helvetica','FontSize',24)
+	title('Surface gravity waves','FontName', 'Helvetica','FontSize',36);
     text(0,double(-max(bathymetry)),sprintf('t=%d seconds',round(t(iTime))),'FontName', 'Helvetica','FontSize',20, 'BackgroundColor', 'white')
 
 
@@ -98,7 +99,7 @@ for iTime=1:1000%length(t)
 	T = get(gca,'tightinset');
 	set(gca,'position',[T(1) T(2) 1-T(1)-T(3) 1-T(2)-T(4)-.05]);
     
-    output = sprintf('%s/t_%03d', FramesFolder,iTime-1);
-    export_fig(output,'-r300')
+    output = sprintf('%s/t_%03d.png', FramesFolder,iTime-1);
+    export_fig(output,'-r72')
 end
 

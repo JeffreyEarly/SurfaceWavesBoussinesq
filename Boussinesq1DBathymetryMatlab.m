@@ -11,7 +11,7 @@ function Boussinesq1DBathymetryMatlab
 	wave_generator = ncread(file, 'wave_generator');
 
 	scrsz = get(0,'ScreenSize');
-	figure('Position',[1 scrsz(4)/2 scrsz(3) scrsz(4)/2])
+	figure('Position',[1 scrsz(4)/2 1280 720])
 
 	% 'area' fills everything between the line and the zero axis,
 	harea = area(x/1000, -bathymetry);
@@ -30,9 +30,10 @@ function Boussinesq1DBathymetryMatlab
 	% adjust the axis to show a bit more earth and wave surface.
     xlim([min(x/1000) max(x/1000)])
 	ylim([-max(bathymetry)*1.1 max(max(ssh))*2.0])
-	xlabel('distance (km)','FontName', 'Helvetica','FontSize',18)
-	ylabel('depth (m)','FontName', 'Helvetica','FontSize',18)
-	title('Surface gravity waves','FontName', 'Helvetica','FontSize',24);
+    set( gca, 'FontSize', 18);
+	xlabel('distance (km)','FontName', 'Helvetica','FontSize',24)
+	ylabel('depth (m)','FontName', 'Helvetica','FontSize',24)
+	title('Surface gravity waves','FontName', 'Helvetica','FontSize',36);
     text(0,double(-max(bathymetry)),sprintf('t=%d seconds',round(t(iTime))),'FontName', 'Helvetica','FontSize',20, 'BackgroundColor', 'white')
 
 
