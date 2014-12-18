@@ -1,6 +1,6 @@
 function Boussinesq1DBathymetryMatlab
 
-	file = '/Users/jearly/Desktop/BoussinesqWave.nc';
+	file = '/Users/jearly/Desktop/BoussinesqWaveHD.nc';
 
 	x = ncread(file, 'x');
 	t = ncread(file, 'time');

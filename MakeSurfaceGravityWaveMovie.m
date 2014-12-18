@@ -1,5 +1,5 @@
 
-file = '/Users/jearly/Desktop/BoussinesqWave.nc';
+file = '/Users/jearly/Desktop/BoussinesqWaveHD.nc';
 FramesFolder ='/Users/jearly/Desktop/BoussinesqWaveFrames';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -29,6 +29,7 @@ wave_generator = ncread(file, 'wave_generator');
 %
 scrsz = get(0,'ScreenSize');
 figure('Position',[1 scrsz(4)/2 1280 720])
+set(gcf, 'Color', 'w');
 
 for iTime=1:length(t)
     clf
