@@ -30,7 +30,8 @@ wave_generator = ncread(file, 'wave_generator');
 scrsz = get(0,'ScreenSize');
 figure('Position',[1 scrsz(4)/2 1280 720])
 
-for iTime=1:1000%length(t)
+for iTime=1:length(t)
+    clf
 	% 'area' fills everything between the line and the zero axis,
 	harea = area(x/1000, -bathymetry);
 	% so we need to color that area 'blue'

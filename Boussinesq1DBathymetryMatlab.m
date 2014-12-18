@@ -24,7 +24,7 @@ function Boussinesq1DBathymetryMatlab
 	plot(x/1000, -bathymetry, 'LineWidth', 2, 'Color', 'black')
     
     iTime = length(t);
-	%iTime = 2;
+	%iTime = 40;
 	wave = ssh(:,iTime);
     
 	% adjust the axis to show a bit more earth and wave surface.
